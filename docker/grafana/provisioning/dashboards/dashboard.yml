@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Wetube Upload Dashboards
+    orgId: 1
+    folder: Wetube
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

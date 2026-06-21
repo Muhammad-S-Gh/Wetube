@@ -1,0 +1,163 @@
+services:
+    app:
+        build:
+            context: ./docker/php # custom
+        user: '${UID}:${GID}'
+        volumes:
+            - ./backend:/var/www # Bind mount
+        depends_on:
+            - db
+            - redis
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+    nginx:
+        image: nginx:${NGINX_VERSION} # ready image
+        ports:
+            - '8000:80' # Map localhost port 8000 to Container port 80
+        volumes:
+            - ./backend:/var/www
+            - ./docker/nginx:/etc/nginx/conf.d # nginx config injection
+        depends_on:
+            - app
+
+    db:
+        image: mysql:${MYSQL_VERSION}
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        ports:
+            - '3306:3306'
+        volumes:
+            - db_data:/var/lib/mysql # persist data
+
+    redis:
+        image: redis:${REDIS_VERSION}
+        restart: unless-stopped
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis_data:/data
+            - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+        command: redis-server /usr/local/etc/redis/redis.conf
+
+    scheduler:
+        build:
+            context: ./docker/php
+        volumes:
+            - ./backend:/var/www
+        command: supercronic /etc/supercronic/crontab
+        depends_on:
+            - app
+            - db
+            - redis
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+    queue:
+        build:
+            context: ./docker/php
+        volumes:
+            - ./backend:/var/www
+            - ./docker/php/queue-worker.conf:/etc/supervisor/conf.d/queue-worker.conf
+        command: supervisord -c /etc/supervisor/supervisord.conf -n
+        restart: unless-stopped
+        depends_on:
+            - app
+            - db
+            - redis
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+    # stores metrics from cAdvisor
+    prometheus:
+        image: prom/prometheus:${PROMETHEUS_VERSION}
+        container_name: prometheus
+        ports:
+            - '9090:9090'
+        volumes:
+            - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+            - prometheus_data:/prometheus
+
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml' # Force this config
+            - '--web.enable-remote-write-receiver' # recive data from k6
+
+    # metrics Visualization
+    grafana:
+        image: grafana/grafana:${GRAFANA_VERSION}
+        container_name: grafana
+        ports:
+            - '3000:3000'
+        volumes:
+            - grafana_data:/var/lib/grafana
+            - ./docker/grafana/provisioning:/etc/grafana/provisioning
+            - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+        environment:
+            GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+            GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+        depends_on:
+            - prometheus
+
+    # load testing
+    k6:
+        image: grafana/k6:${K6_VERSION}
+        container_name: k6
+        volumes:
+            - ./k6:/scripts
+        depends_on:
+            - nginx
+            - prometheus
+        networks:
+            - default
+
+    cadvisor:
+        image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION}
+        container_name: cadvisor
+        ports:
+            - '8080:8080'
+        volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:ro
+            - /sys:/sys:ro
+            - /var/lib/docker:/var/lib/docker:ro
+            - /dev/disk:/dev/disk:ro
+        privileged: true
+        devices:
+            - /dev/kmsg
+
+    mysql-exporter:
+        image: prom/mysqld-exporter:${MYSQL_EXPORTER}
+        container_name: mysql-exporter
+        ports:
+            - '9104:9104'
+        volumes:
+            - ./docker/mysql-exporter/.my.cnf:/etc/.my.cnf:ro
+        command:
+            - '--config.my-cnf=/etc/.my.cnf'
+        depends_on:
+            - db
+
+    redis-exporter:
+        image: oliver006/redis_exporter:${REDIS_EXPORTER}
+        container_name: redis-exporter
+        ports:
+            - '9121:9121'
+        environment:
+            REDIS_ADDR: redis://redis:6379
+        depends_on:
+            - redis
+
+volumes:
+    db_data:
+    redis_data:
+    grafana_data:
+    prometheus_data:
+
+# Bind Mount: YOU control location. (source code, configs)
+# Named_volume: Docker-managed persistent storage. (databases, Redis persistence, Grafana dashboards)
+# Both sync and real-time share the data for both HSF (Machine) and VFS (Container)

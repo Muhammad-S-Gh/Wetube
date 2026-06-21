@@ -1,0 +1,51 @@
+/* GLOBAL */
+body {
+    background-color: #f9fafb; /* Tailwind gray-50 */
+    color: #111827;
+    font-family: "Instrument Sans", sans-serif;
+}
+
+.dark body {
+    background-color: #0f0f0f;
+    color: #f3f4f6;
+}
+
+/* FILE UPLOAD COMPONENT */
+.file-area {
+    position: relative;
+}
+
+.file-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Dropzone style */
+.input-title {
+    width: 100%;
+    padding: 40px;
+    border-radius: 16px;
+    border: 2px dashed #e5e7eb;
+    background-color: #ffffff;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Hover */
+.file-area:hover .input-title {
+    background-color: #f3f4f6;
+    border-color: #ef4444;
+}
+
+/* Dark mode */
+.dark .input-title {
+    background-color: #181818;
+    border-color: #2a2a2a;
+}
+
+.dark .file-area:hover .input-title {
+    background-color: #2a2a2a;
+    border-color: #ef4444;
+}

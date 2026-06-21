@@ -1,0 +1,143 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "max(k6_vus)", "legendFormat": "VUs", "refId": "A" }],
+      "title": "Active Virtual Users",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "sum(rate(k6_http_reqs_total[1m]))", "legendFormat": "req/s", "refId": "A" }],
+      "title": "HTTP Request Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "sum(rate(k6_http_req_failed_total[1m])) / sum(rate(k6_http_reqs_total[1m]))", "legendFormat": "error rate", "refId": "A" }],
+      "title": "HTTP Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "p95", "refId": "A" }],
+      "title": "HTTP p95 Duration",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(k6_http_req_duration_seconds_bucket{test=~\"legacy-store|optimized-store\"}[1m])) by (le, test)) * 1000", "legendFormat": "p50 {{test}}", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_seconds_bucket{test=~\"legacy-store|optimized-store\"}[1m])) by (le, test)) * 1000", "legendFormat": "p95 {{test}}", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(k6_http_req_duration_seconds_bucket{test=~\"legacy-store|optimized-store\"}[1m])) by (le, test)) * 1000", "legendFormat": "p99 {{test}}", "refId": "C" }
+      ],
+      "title": "Upload Latency by Test",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(k6_http_reqs_total{endpoint=\"videos.store\"}[1m]))", "legendFormat": "legacy store", "refId": "A" },
+        { "expr": "sum(rate(k6_http_reqs_total{endpoint=\"videos.optimizedStore\"}[1m]))", "legendFormat": "optimized store", "refId": "B" }
+      ],
+      "title": "Upload Endpoint Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(k6_legacy_upload_accepted_total[1m])) / (sum(rate(k6_legacy_upload_accepted_total[1m])) + sum(rate(k6_legacy_upload_rejected_total[1m])) + 1e-9)", "legendFormat": "legacy accepted", "refId": "A" },
+        { "expr": "sum(rate(k6_optimized_upload_success_total[1m])) / (sum(rate(k6_optimized_upload_success_total[1m])) + sum(rate(k6_optimized_upload_errors_total[1m])) + 1e-9)", "legendFormat": "optimized success", "refId": "B" }
+      ],
+      "title": "Custom Upload Success Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(k6_legacy_upload_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "legacy p95", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(k6_optimized_upload_duration_seconds_bucket[1m])) by (le)) * 1000", "legendFormat": "optimized p95", "refId": "B" }
+      ],
+      "title": "Custom Upload Duration p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(increase(k6_legacy_upload_processing_blocked_total[5m]))", "legendFormat": "legacy processing-blocked", "refId": "A" },
+        { "expr": "sum(increase(k6_legacy_upload_rejected_total[5m]))", "legendFormat": "legacy rejected", "refId": "B" },
+        { "expr": "sum(increase(k6_optimized_upload_errors_total[5m]))", "legendFormat": "optimized errors", "refId": "C" },
+        { "expr": "sum(increase(k6_iterations_total[5m]))", "legendFormat": "iterations", "refId": "D" }
+      ],
+      "title": "Errors & Iterations (5m windows)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["k6", "wetube", "upload"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Wetube Video Upload Load Tests",
+  "uid": "wetube-upload-k6",
+  "version": 1
+}
