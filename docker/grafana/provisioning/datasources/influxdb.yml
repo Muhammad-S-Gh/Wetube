@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+    - name: InfluxDB-k6
+      uid: influxdb
+      type: influxdb
+      access: proxy
+      url: http://influxdb:8086
+      database: wetube_k6 # ${INFLUXDB_DB}
+      isDefault: false
+      editable: false

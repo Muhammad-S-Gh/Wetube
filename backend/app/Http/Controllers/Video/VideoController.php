@@ -13,6 +13,7 @@ use App\Models\Notification;
 use App\Models\Video;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VideoController extends Controller
 {
@@ -48,6 +49,7 @@ class VideoController extends Controller
      */
     public function store(UploadRequest $request)
     {
+        Log::info('Upload request received', ['files' => $request->allFiles(), 'user' => $request->user()?->id]);
         /** @var \App\Models\Video $video */
         $video = $this->videoService->uploadVideo($request->validated());
         return back()->with([
@@ -61,6 +63,7 @@ class VideoController extends Controller
      */
     public function optimizedStore(OptimizedUploadRequest $request)
     {
+        Log::info('Upload request received', ['files' => $request->allFiles(), 'user' => $request->user()?->id]);
         $video = $this->videoService->uploadVideoOptimized($request->validated());
 
         return back()->with([

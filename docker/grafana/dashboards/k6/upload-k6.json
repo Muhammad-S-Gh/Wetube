@@ -1,0 +1,759 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+            "id": 1,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT mean(\"value\") FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "1. Average Response Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "2. P95 Response Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "3. P99 Response Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+            "id": 4,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT max(\"value\") FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "4. Max Response Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "reqps"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 0, "y": 7 },
+            "id": 5,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT non_negative_derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "5. Requests Per Second (RPS)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "blue", "value": null }]
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 6, "y": 7 },
+            "id": 6,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": ["sum"],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "query": "SELECT sum(\"value\") FROM \"http_reqs\" WHERE $timeFilter",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "6. Total Requests",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 12, "y": 7 },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT mean(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "7. Active Virtual Users",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 6, "x": 18, "y": 7 },
+            "id": 8,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT max(\"value\") FROM \"vus_max\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "8. Maximum Configured VUs",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 15
+                    },
+                    "max": 100,
+                    "min": 0,
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 0, "y": 14 },
+            "id": 9,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT mean(\"value\") * 100 FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "9. Error Rate %",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 15
+                    },
+                    "max": 100,
+                    "min": 0,
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 8, "y": 14 },
+            "id": 10,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT mean(\"value\") * 100 FROM \"checks\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "10. Successful Checks %",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "red", "value": 1 }
+                        ]
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 16, "y": 14 },
+            "id": 11,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": ["max"],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "query": "SELECT max(\"value\") FROM \"dropped_iterations\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "11. Dropped Iterations",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 12, "x": 0, "y": 21 },
+            "id": 12,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT mean(\"value\") FROM \"iteration_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "12. Iteration Duration Mean",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 12, "x": 12, "y": 21 },
+            "id": 13,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT percentile(\"value\", 95) FROM \"iteration_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "13. Iteration Duration P95",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 0, "y": 28 },
+            "id": 14,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"legacy_upload_accepted\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                },
+                {
+                    "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"legacy_upload_rejected\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "B",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "transformations": [
+                {
+                    "id": "math",
+                    "options": {
+                        "expression": "A / (A + B)"
+                    }
+                }
+            ],
+            "title": "14. Legacy Pipeline – Acceptance Rate (derived)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 8, "y": 28 },
+            "id": 15,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT percentile(\"value\", 95) FROM \"legacy_upload_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "15. Legacy Pipeline – P95 Duration (s)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "blue", "value": null }]
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 16, "y": 28 },
+            "id": 16,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": ["last"],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "query": "SELECT sum(\"value\") FROM \"legacy_upload_processing_blocked\" WHERE $timeFilter",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "16. Legacy Pipeline – Processing Blocked (total)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 0, "y": 35 },
+            "id": 17,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"optimized_upload_success\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                },
+                {
+                    "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"optimized_upload_errors\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+                    "rawQuery": true,
+                    "refId": "B",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "transformations": [
+                {
+                    "id": "math",
+                    "options": {
+                        "expression": "A / (A + B)"
+                    }
+                }
+            ],
+            "title": "17. Optimized Pipeline – Success Rate (derived)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 1,
+                        "showPoints": "never",
+                        "fillOpacity": 10
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 8, "y": 35 },
+            "id": 18,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": { "mode": "single" }
+            },
+            "targets": [
+                {
+                    "query": "SELECT percentile(\"value\", 95) FROM \"optimized_upload_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "18. Optimized Pipeline – P95 Duration (s)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "influxdb", "uid": "influxdb" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "blue", "value": null }]
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": { "h": 7, "w": 8, "x": 16, "y": 35 },
+            "id": 19,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": ["last"],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "query": "SELECT sum(\"value\") FROM \"optimized_upload_errors\" WHERE $timeFilter",
+                    "rawQuery": true,
+                    "refId": "A",
+                    "resultFormat": "time_series"
+                }
+            ],
+            "title": "19. Optimized Pipeline – Total Errors",
+            "type": "stat"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 40,
+    "tags": ["k6", "wetube", "upload"],
+    "templating": { "list": [] },
+    "time": { "from": "now-15m", "to": "now" },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Wetube Video Upload Load Tests",
+    "uid": "wetube-upload-k6",
+    "version": 2
+}
