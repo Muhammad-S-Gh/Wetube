@@ -1,161 +1,220 @@
-# 🎬 Wetube
+# Wetube
 
 <p align="center">
-  <strong>A Laravel-powered YouTube-inspired video platform built around asynchronous video processing, cloud media storage, and performance observability.</strong>
+  <strong>A video platform engineered around asynchronous processing, queue-based workloads, and observable performance.</strong>
 </p>
 
 <p align="center">
-  Laravel 12 • PHP 8.2+ • FFmpeg • Cloudinary • Docker • k6 • Prometheus • Grafana
+  Laravel 12 · PHP 8.2+ · MySQL · Redis · FFmpeg · Cloudinary · Docker · k6 · InfluxDB · Prometheus · Grafana
 </p>
 
 ---
 
-## 📖 About
+## Overview
 
-**Wetube** is a YouTube-inspired video platform built with Laravel and designed to explore the engineering challenges behind modern video applications.
+Wetube is a YouTube-inspired video platform built to investigate a specific backend engineering problem:
 
-The project goes beyond basic CRUD by combining **video uploads, asynchronous processing, FFmpeg, Cloudinary, Redis queues, Docker, load testing, and observability** into one application.
+**How should a video-processing system handle expensive media operations without allowing them to dominate the HTTP request lifecycle?**
 
-A major focus is the video-processing pipeline and its behavior under load. Wetube includes both a traditional upload flow and an optimized upload flow that moves expensive work into background jobs so the API can accept uploads quickly while processing continues asynchronously.
+The project implements two upload pipelines:
 
-> 🚧 **Project status:** Active development. Core application and infrastructure are implemented; performance scenarios and further polishing are ongoing.
+- **Legacy pipeline** — `POST /videos`
+- **Optimized pipeline** — `POST /videos/optimized`
 
----
+Both pipelines accept the same type of upload, but the optimized pipeline is designed around asynchronous processing and background jobs.
 
-## ✨ Highlights
+The project therefore focuses less on the social-platform features themselves and more on the engineering behind a workload involving:
 
-- 🎥 Video upload and management
-- ⚡ Optimized asynchronous video-processing pipeline
-- 🧰 FFmpeg-powered video processing
-- ☁️ Cloudinary media storage and delivery
-- 🔐 Laravel Sanctum authentication
-- 👤 User channels and dashboards
-- ❤️ Likes and 💬 comments
-- 🚨 Video reporting and notifications
-- 🕘 Watch history
-- 🔄 Video upload-status tracking
-- 🧵 Redis-backed queues and background jobs
-- 🐳 Fully containerized development environment
-- 📈 k6 load testing
-- 📊 Prometheus metrics
-- 📉 Grafana dashboards
-- 🖥️ cAdvisor, MySQL Exporter, and Redis Exporter monitoring
+- large multipart uploads
+- video processing with FFmpeg
+- asynchronous jobs
+- Redis-backed queues
+- cloud media storage
+- concurrent traffic
+- performance measurement
+- application and infrastructure observability
 
 ---
 
-## 🏗️ Architecture
+## Engineering Focus
+
+The central architectural difference is the treatment of expensive work.
+
+### Legacy pipeline
 
 ```text
-                         ┌──────────────────┐
-                         │      Browser     │
-                         └────────┬─────────┘
-                                  │
-                                  ▼
-                         ┌──────────────────┐
-                         │      Nginx       │
-                         │      :8000       │
-                         └────────┬─────────┘
-                                  │
-                                  ▼
-                    ┌──────────────────────────┐
-                    │      Laravel / PHP       │
-                    │ Controllers • Services   │
-                    │ Auth • Validation • API  │
-                    └───────┬──────────┬────────┘
-                            │          │
-                   ┌────────▼───┐  ┌──▼──────────┐
-                   │    MySQL    │  │    Redis    │
-                   │   :3306     │  │    :6379    │
-                   └─────────────┘  └──────┬──────┘
-                                           │
-                                           ▼
-                                  ┌─────────────────┐
-                                  │ Queue Workers   │
-                                  └────────┬────────┘
-                                           │
-                         ┌─────────────────┼──────────────────┐
-                         ▼                 ▼                  ▼
-                    ┌─────────┐      ┌──────────┐       ┌────────────┐
-                    │ FFmpeg  │      │Cloudinary│       │ Video Jobs │
-                    └─────────┘      └──────────┘       └────────────┘
-
-     ┌─────────────────────────────────────────────────────────────┐
-     │                     Observability                           │
-     │  k6 ──► Prometheus ──► Grafana                              │
-     │          ▲          │                                      │
-     │          │          ├── cAdvisor                           │
-     │          │          ├── MySQL Exporter                      │
-     │          │          └── Redis Exporter                      │
-     └─────────────────────────────────────────────────────────────┘
+Client
+  │
+  ▼
+Nginx
+  │
+  ▼
+Laravel
+  │
+  ├── Upload handling
+  ├── Processing work
+  └── External media operations
+  │
+  ▼
+Response
 ```
 
-### Video processing pipeline
-
-Wetube provides two upload paths:
-
-- **Legacy:** `POST /videos`
-- **Optimized:** `POST /videos/optimized`
-
-The optimized path is designed to keep expensive media work out of the request lifecycle:
+### Optimized pipeline
 
 ```text
-Upload request
-     │
-     ▼
-Laravel accepts upload
-     │
-     ▼
-Temporary storage
-     │
-     ▼
-Queue background jobs
-     │
-     ├──► Sanitization / moderation
-     │
-     └──► Cloudinary upload
-              │
-              ▼
-        Finalize video
+Client
+  │
+  ▼
+Nginx
+  │
+  ▼
+Laravel
+  │
+  ├── Validate request
+  ├── Store temporary data
+  └── Dispatch background jobs
+           │
+           ▼
+      Redis Queue
+           │
+           ▼
+      Queue Workers
+        │       │
+        │       ├── FFmpeg / media processing
+        │       ├── Moderation / sanitization
+        │       └── Cloudinary operations
+        │
+        ▼
+   Finalize video
 ```
 
----
-
-## 🧰 Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| **Laravel 12** | Backend framework and application architecture |
-| **PHP 8.2+** | Server-side runtime |
-| **Livewire** | Interactive server-driven UI |
-| **Laravel Jetstream** | Authentication and account features |
-| **Laravel Sanctum** | API authentication |
-| **MySQL** | Relational database |
-| **Redis** | Queues and caching |
-| **FFmpeg** | Video processing and media conversion |
-| **Cloudinary** | Cloud media storage and delivery |
-| **Docker Compose** | Local development and service orchestration |
-| **k6** | Load and performance testing |
-| **Prometheus** | Metrics collection |
-| **Grafana** | Metrics visualization and dashboards |
-| **cAdvisor** | Container resource metrics |
-| **MySQL Exporter** | MySQL metrics for Prometheus |
-| **Redis Exporter** | Redis metrics for Prometheus |
-| **Vite** | Frontend asset bundling |
-| **Tailwind CSS** | UI styling |
-| **Pest** | Automated testing |
+The optimized architecture separates **request acceptance** from **expensive background processing**, allowing the application to remain responsive while media work continues asynchronously.
 
 ---
 
-## 📁 Project Structure
+# Architecture
+
+```text
+                              ┌─────────────────┐
+                              │     Browser     │
+                              └────────┬────────┘
+                                       │
+                                       ▼
+                              ┌─────────────────┐
+                              │      Nginx      │
+                              │      :8000      │
+                              └────────┬────────┘
+                                       │
+                                       ▼
+                         ┌────────────────────────────┐
+                         │       Laravel / PHP        │
+                         │                            │
+                         │ Controllers • Services     │
+                         │ Validation • Auth • API    │
+                         └───────────┬───────┬────────┘
+                                     │       │
+                          ┌──────────▼───┐ ┌─▼──────────┐
+                          │    MySQL      │ │    Redis    │
+                          │    :3306      │ │    :6379    │
+                          └───────────────┘ └─────┬───────┘
+                                                  │
+                                                  ▼
+                                         ┌────────────────┐
+                                         │ Queue Workers  │
+                                         └───────┬────────┘
+                                                 │
+                              ┌──────────────────┼──────────────────┐
+                              │                  │                  │
+                              ▼                  ▼                  ▼
+                           FFmpeg           Cloudinary       Processing Jobs
+
+
+        ┌──────────────────────────────────────────────────────────┐
+        │                       Observability                       │
+        │                                                          │
+        │   k6 ───────────► InfluxDB ───────────────► Grafana     │
+        │                                                          │
+        │   Laravel ──────► Prometheus ──────────────► Grafana    │
+        │                         ▲                                │
+        │                         ├── cAdvisor                    │
+        │                         ├── MySQL Exporter               │
+        │                         └── Redis Exporter               │
+        └──────────────────────────────────────────────────────────┘
+```
+
+### Observability model
+
+Wetube deliberately separates load-test telemetry from application telemetry.
+
+| System             | Responsibility                              |
+| ------------------ | ------------------------------------------- |
+| **k6**             | Generates controlled HTTP load              |
+| **InfluxDB**       | Stores k6 test metrics                      |
+| **Prometheus**     | Collects Laravel and infrastructure metrics |
+| **Grafana**        | Visualizes both sources                     |
+| **cAdvisor**       | Container-level resource metrics            |
+| **MySQL Exporter** | MySQL metrics                               |
+| **Redis Exporter** | Redis metrics                               |
+
+This separation makes it possible to observe both **what the client experienced** and **what the system was doing internally** during the same workload.
+
+---
+
+# Features
+
+Wetube includes:
+
+- Video upload and management
+- Asynchronous video processing
+- FFmpeg-based processing
+- Cloudinary media storage
+- Redis queues
+- Background workers
+- Upload status tracking
+- Authentication and user channels
+- Likes and comments
+- Reports and notifications
+- Watch history
+- Dockerized local infrastructure
+- Automated backend testing
+- k6 load-testing scenarios
+- Prometheus metrics
+- Grafana dashboards
+- MySQL, Redis, and container monitoring
+
+---
+
+# Technology Stack
+
+| Technology     | Role                                    |
+| -------------- | --------------------------------------- |
+| Laravel 12     | Application framework                   |
+| PHP 8.2+       | Backend runtime                         |
+| MySQL          | Relational persistence                  |
+| Redis          | Queues and caching                      |
+| FFmpeg         | Video processing                        |
+| Cloudinary     | Media storage and delivery              |
+| Docker Compose | Service orchestration                   |
+| k6             | Load generation and performance testing |
+| InfluxDB       | k6 metric storage                       |
+| Prometheus     | Application and infrastructure metrics  |
+| Grafana        | Observability and visualization         |
+| cAdvisor       | Container monitoring                    |
+| Pest           | Automated testing                       |
+| Livewire       | Interactive UI                          |
+| Jetstream      | Authentication                          |
+| Sanctum        | API authentication                      |
+| Vite           | Asset build pipeline                    |
+| Tailwind CSS   | Frontend styling                        |
+
+---
+
+# Project Structure
 
 ```text
 Wetube/
-├── backend/                       # Laravel application
+├── backend/
 │   ├── app/
-│   │   ├── Http/
-│   │   ├── Jobs/Video/            # Asynchronous video-processing jobs
-│   │   ├── Services/              # Application/business services
-│   │   └── ...
 │   ├── config/
 │   ├── database/
 │   ├── resources/
@@ -164,19 +223,20 @@ Wetube/
 │   ├── composer.json
 │   └── package.json
 │
-├── k6/                            # Performance/load tests
-│   ├── lib/                        # Shared test helpers and fixtures
-│   ├── upload-test.js              # Legacy upload load test
-│   ├── optimized-upload-test.js    # Optimized upload load test
+├── k6/
+│   ├── lib/
+│   ├── ffmpeg-upload-test.js
+│   ├── optimized-upload-test.js
+│   ├── generate-fixtures.sh
 │   └── README.md
 │
 ├── docker/
-│   ├── grafana/                   # Dashboards + provisioning
-│   ├── nginx/                     # Nginx configuration
-│   ├── php/                       # PHP image/configuration
-│   ├── prometheus/                # Prometheus configuration
-│   ├── redis/                     # Redis configuration
-│   └── mysql-exporter/            # MySQL exporter configuration
+│   ├── grafana/
+│   ├── nginx/
+│   ├── php/
+│   ├── prometheus/
+│   ├── redis/
+│   └── mysql-exporter/
 │
 ├── docker-compose.yml
 ├── .env.example
@@ -185,206 +245,141 @@ Wetube/
 
 ---
 
-## 🚀 Getting Started
+# Application Endpoints
 
-### Prerequisites
+The performance study is centered around the two upload endpoints:
 
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- Git
+| Pipeline  | Endpoint                     | Purpose                     |
+| --------- | ---------------------------- | --------------------------- |
+| Legacy    | `POST /videos`               | Traditional upload flow     |
+| Optimized | `POST /videos/optimized`     | Asynchronous upload flow    |
+| Status    | `GET /videos/{video}/status` | Processing-state visibility |
 
-For a non-Docker Laravel workflow, you will additionally need PHP, Composer, Node.js/npm, MySQL, Redis, and FFmpeg.
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Muhammad-S-Gh/Wetube.git
-cd Wetube
-```
-
-### 2. Configure environment variables
-
-```bash
-cp .env.example .env
-```
-
-Fill in the required database, Grafana, Cloudinary, and image-version settings for your environment.
-
-> 🔒 Never commit real credentials or secrets.
-
-### 3. Start Docker
-
-```bash
-docker compose up -d --build
-```
-
-Check services:
-
-```bash
-docker compose ps
-```
-
-### 4. Prepare Laravel
-
-```bash
-docker compose exec app composer install
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate
-```
-
-### 5. Open Wetube
-
-**http://localhost:8000**
+The remainder of the application provides the surrounding platform functionality required to create, manage, and consume videos.
 
 ---
 
-## 🐳 Docker Services
+# Performance Testing
 
-| Service | Port | Role |
-|---|---:|---|
-| `nginx` | `8000` | Web entry point |
-| `app` | — | Laravel/PHP application |
-| `db` | `3306` | MySQL |
-| `redis` | `6379` | Queue/cache backend |
-| `queue` | — | Background job worker |
-| `scheduler` | — | Scheduled tasks |
-| `k6` | — | Load testing |
-| `prometheus` | `9090` | Metrics collection |
-| `grafana` | `3000` | Metrics dashboards |
-| `cadvisor` | `8080` | Container metrics |
-| `mysql-exporter` | `9104` | MySQL metrics |
-| `redis-exporter` | `9121` | Redis metrics |
+## Objective
 
-Useful commands:
+The k6 suite evaluates the behavior of the two upload pipelines under concurrent traffic.
 
-```bash
-# Start everything
-docker compose up -d
+The comparison focuses on:
 
-# Rebuild containers
-docker compose up -d --build
+- request latency
+- successful upload acceptance
+- failed requests
+- server errors
+- validation failures
+- processing conflicts
+- system checks
+- iteration behavior
 
-# Stop services
-docker compose down
+The optimized pipeline is expected to reduce the amount of expensive work performed during the request itself.
 
-# Application logs
-docker compose logs -f app
-
-# Queue logs
-docker compose logs -f queue
-
-# Open a Laravel shell
-docker compose exec app bash
-```
+The benchmark therefore evaluates **request responsiveness**, rather than attempting to claim that asynchronous processing makes the actual media-processing work disappear.
 
 ---
 
-## 🎥 Video Uploads
+## Test Scenarios
 
 ### Legacy upload
 
-```http
+File:
+
+```text
+k6/ffmpeg-upload-test.js
+```
+
+Endpoint:
+
+```text
 POST /videos
 ```
 
-The traditional upload path accepts the multipart upload and dispatches video-processing work.
+Default workload:
+
+```text
+Maximum VUs: 20
+Ramp:        45s
+Hold:        3m
+```
+
+The test measures:
+
+- upload acceptance rate
+- request duration
+- processing conflicts
+- validation failures
+- server errors
+
+---
 
 ### Optimized upload
 
-```http
+File:
+
+```text
+k6/optimized-upload-test.js
+```
+
+Endpoint:
+
+```text
 POST /videos/optimized
 ```
 
-The optimized workflow accepts the upload, stores temporary files, and delegates expensive processing to background jobs.
-
-The processing pipeline includes sanitization/moderation followed by Cloudinary upload and finalization.
-
-### Upload status
-
-```http
-GET /videos/{video}/status
-```
-
-This endpoint exposes the state of an uploaded video while background processing is taking place.
-
-### Video management
-
-```http
-GET    /videos
-POST   /videos
-POST   /videos/optimized
-GET    /videos/{video}
-PUT    /videos/{video}
-DELETE /videos/{video}
-```
-
-Authenticated users can also interact with videos through likes, comments, reports, and notifications.
-
----
-
-## 🔐 Authentication & Features
-
-Authenticated users can access:
-
-- Dashboard
-- Channels
-- Watch history
-- Video management
-- Likes
-- Comments
-- Reports
-- Notifications
-- Video upload status
-
-The application uses Laravel Jetstream for account/authentication functionality and Sanctum for API authentication.
-
----
-
-## 🧪 Testing
-
-Wetube uses Pest/Laravel testing tooling.
-
-From `backend/`:
-
-```bash
-php artisan test
-```
-
-Or with Docker:
-
-```bash
-docker compose exec app php artisan test
-```
-
----
-
-## 📈 Performance Testing with k6
-
-Wetube includes dedicated k6 scenarios for video-upload load testing. The suite compares the legacy and optimized upload pipelines and exports metrics to Prometheus.
-
-### Generate test fixtures
-
-```bash
-chmod +x k6/generate-fixtures.sh
-./k6/generate-fixtures.sh
-```
-
-Default fixtures:
+Default workload:
 
 ```text
-k6/sample_video.mp4
-k6/sample_thumb.jpg
+Maximum VUs: 20
+Ramp:        45s
+Hold:        3m
 ```
 
-Override them with `VIDEO_FIXTURE` and `THUMB_FIXTURE` when required.
+The test measures:
 
-### Seed load-test users
+- upload success rate
+- request duration
+- processing conflicts
+- validation failures
+- server errors
+
+The scenario can be parameterized without modifying the test source.
+
+---
+
+# Running the Performance Suite
+
+The benchmark stack consists of:
+
+```text
+Laravel + Nginx + MySQL + Redis + Queue Workers
+                         │
+                         ▼
+                        k6
+                         │
+                         ▼
+                     InfluxDB
+                         │
+                         ▼
+                      Grafana
+```
+
+Start the application and monitoring stack:
 
 ```bash
-docker compose exec app php artisan db:seed --class=LoadTestUserSeeder
+docker compose up -d --build
 ```
 
-The setup provisions per-VU users such as:
+Create the deterministic load-test accounts:
+
+```bash
+docker compose exec app php artisan db:seed --class=K6TestUserSeeder
+```
+
+The scenarios use users such as:
 
 ```text
 loadtest1@example.com
@@ -392,242 +387,331 @@ loadtest2@example.com
 ...
 ```
 
-### Start the stack
+---
+
+## Smoke Test
+
+Before a full benchmark, the optimized route can be verified with a minimal one-iteration scenario:
 
 ```bash
-docker compose up -d prometheus grafana nginx app db redis queue
+docker compose --profile test run --rm \
+  -e K6_SHORT=true \
+  k6 run /scripts/optimized-upload-test.js
 ```
 
-### Legacy upload test
+A successful smoke test confirms that:
+
+- the test can authenticate
+- a CSRF token is obtained
+- the upload endpoint is reachable
+- the multipart request is accepted
+- the request does not fail because of a server error
+- the scenario reaches its configured thresholds
+
+The legacy scenario can be verified in the same way:
 
 ```bash
-docker compose run --rm k6 run \
-  -o experimental-prometheus-rw=http://prometheus:9090/api/v1/write \
-  --tag test=legacy-store \
-  /scripts/upload-test.js
+docker compose --profile test run --rm \
+  -e K6_SHORT=true \
+  k6 run /scripts/ffmpeg-upload-test.js
 ```
-
-### Optimized upload test
-
-```bash
-docker compose run --rm k6 run \
-  -o experimental-prometheus-rw=http://prometheus:9090/api/v1/write \
-  --tag test=optimized-store \
-  /scripts/optimized-upload-test.js
-```
-
-### Adjust load
-
-```bash
-MAX_VUS=100 HOLD_DURATION=5m RAMP_DURATION=1m \
-docker compose run --rm k6 run /scripts/optimized-upload-test.js
-```
-
-The legacy scenario intentionally uses lower concurrency because each request sends a complete multipart payload and still triggers the heavier processing path.
-
-For more detail, see [`k6/README.md`](k6/README.md).
 
 ---
 
-## 📊 Observability
+# Full Benchmark
 
-Wetube treats performance testing as an observable system rather than simply a pass/fail benchmark.
+For a direct comparison, both pipelines should be executed with the **same workload parameters**.
+
+Example:
+
+```bash
+docker compose --profile test run --rm \
+  -e K6_MAX_VUS=20 \
+  -e K6_HOLD_DURATION=3m \
+  -e K6_RAMP_DURATION=45s \
+  k6 run /scripts/ffmpeg-upload-test.js
+```
+
+Then:
+
+```bash
+docker compose --profile test run --rm \
+  -e K6_MAX_VUS=20 \
+  -e K6_HOLD_DURATION=3m \
+  -e K6_RAMP_DURATION=45s \
+  k6 run /scripts/optimized-upload-test.js
+```
+
+Using identical load parameters avoids comparing two different workloads.
+
+---
+
+# k6 Results
+
+Each scenario emits a compact JSON summary at the end of the run.
+
+The summary contains the values most useful for pipeline comparison:
+
+| Metric                    | Legacy | Optimized |
+| ------------------------- | -----: | --------: |
+| P95 duration              |      — |         — |
+| Acceptance / success rate |      — |         — |
+| HTTP failed rate          |      — |         — |
+| Checks rate               |      — |         — |
+| Server errors             |      — |         — |
+| Validation errors         |      — |         — |
+| Processing blocked        |      — |         — |
+
+The most important latency measurement is **P95 request duration**.
+
+### Comparison
 
 ```text
-                 ┌───────────┐
-                 │    k6     │
-                 └─────┬─────┘
-                       │ Remote Write
-                       ▼
-                ┌─────────────┐
-                │ Prometheus  │
-                └──────┬──────┘
-                       │
-                       ▼
-                ┌─────────────┐
-                │   Grafana   │
-                └─────────────┘
-
- Infrastructure ──► cAdvisor
-                ├─► MySQL Exporter
-                └─► Redis Exporter
-                         │
-                         ▼
-                     Prometheus
+Improvement % =
+((Legacy P95 - Optimized P95) / Legacy P95) × 100
 ```
 
-### Prometheus
+Only measured benchmark values should be published in the project documentation.
 
-**http://localhost:9090**
-
-Prometheus receives k6 remote-write metrics and scrapes infrastructure exporters.
-
-### Grafana
-
-**http://localhost:3000**
-
-The repository includes Grafana provisioning and a dedicated **Wetube Video Upload Load Tests** dashboard.
-
-### Exporters
-
-The monitoring stack includes metrics for:
-
-- Docker containers through cAdvisor
-- MySQL through `mysqld-exporter`
-- Redis through `redis_exporter`
-
-This makes it possible to correlate API/load-test behavior with infrastructure utilization.
+No performance number is considered valid unless it comes from an actual recorded run.
 
 ---
 
-## 🎯 Performance Testing Goals
+# Observing the Tests in Grafana
 
-The k6 suite is intended to answer questions such as:
+Grafana:
 
-- How quickly can the API accept video uploads?
-- How does the legacy pipeline behave as concurrency increases?
-- Does the optimized pipeline keep request latency under control?
-- How many uploads fail or are rejected under load?
-- What happens to queue workers as traffic increases?
-- How do MySQL, Redis, and container resources behave during a test?
-
-Custom metrics include upload acceptance, upload duration, validation failures, processing conflicts, and server errors.
-
-> 📌 **Benchmark results:** Final benchmark numbers will be added after the performance-test suite is fully polished and repeatable.
-
----
-
-## 🗺️ Roadmap
-
-- [x] Laravel video-platform foundation
-- [x] Authentication and user channels
-- [x] Video upload workflow
-- [x] FFmpeg processing
-- [x] Cloudinary integration
-- [x] Redis queue workers
-- [x] Optimized asynchronous upload pipeline
-- [x] Dockerized infrastructure
-- [x] Prometheus + Grafana observability
-- [x] k6 upload load tests
-- [ ] Finalize upload/update performance scenarios
-- [ ] Add reproducible benchmark results
-- [ ] Expand automated API/integration coverage
-- [ ] Continue UI/UX polishing
-
----
-
-## 🛠️ Useful Commands
-
-From `backend/`:
-
-```bash
-composer install
-npm install
-php artisan test
-php artisan optimize:clear
-npm run dev
-npm run build
+```text
+http://localhost:3000
 ```
 
-With Docker:
+Wetube provisions a dedicated dashboard:
+
+```text
+Wetube Video Upload Load Tests
+```
+
+The dashboard is backed by **InfluxDB**, which receives the k6 metrics.
+
+It exposes the standard k6 signals together with Wetube-specific metrics.
+
+### Standard k6 metrics
+
+Examples include:
+
+- HTTP request duration
+- HTTP request rate
+- active VUs
+- maximum VUs
+- failed HTTP requests
+- successful checks
+- iteration duration
+- dropped iterations
+
+### Legacy metrics
+
+```text
+legacy_upload_accepted
+legacy_upload_processing_blocked
+legacy_upload_validation_errors
+legacy_upload_server_errors
+```
+
+### Optimized metrics
+
+```text
+optimized_upload_success
+optimized_upload_processing_blocked
+optimized_upload_validation_errors
+optimized_upload_server_errors
+```
+
+---
+
+## Reading Grafana During a Test
+
+When a k6 test is running:
+
+```text
+k6
+ │
+ └──► InfluxDB
+          │
+          └──► Grafana
+```
+
+Open the **Wetube Video Upload Load Tests** dashboard and select the time range covering the test run.
+
+The most useful panels for a technical comparison are:
+
+### 1. Request duration
+
+Look at the P95 latency of the legacy and optimized runs.
+
+This answers:
+
+> How quickly does the API respond under load?
+
+### 2. Success / acceptance rate
+
+This answers:
+
+> Does the system continue accepting uploads successfully as concurrency increases?
+
+### 3. Error metrics
+
+Inspect:
+
+- server errors
+- validation failures
+- processing conflicts
+
+This answers:
+
+> Does the optimized architecture introduce or eliminate failure modes under load?
+
+### 4. Infrastructure metrics
+
+Switch to the application/infrastructure dashboards to correlate the test with:
+
+- Redis activity
+- MySQL activity
+- container resource consumption
+- application metrics
+- queue behavior
+
+The result is a complete picture:
+
+```text
+Client experience
+      +
+Application behavior
+      +
+Queue behavior
+      +
+Infrastructure behavior
+```
+
+---
+
+# Application Metrics
+
+Prometheus collects application and infrastructure telemetry separately from k6.
+
+Prometheus:
+
+```text
+http://localhost:9090
+```
+
+Laravel exposes:
+
+```text
+/metrics
+```
+
+The stack also includes:
+
+- cAdvisor
+- MySQL Exporter
+- Redis Exporter
+
+Grafana can therefore be used to correlate application-level measurements with infrastructure behavior during the load test.
+
+---
+
+# Reproducibility
+
+The repository keeps the performance scenarios and their fixtures under version control.
+
+The test inputs are therefore deterministic enough to reproduce the benchmark environment locally.
+
+The configurable parameters are:
+
+```text
+K6_MAX_VUS
+K6_HOLD_DURATION
+K6_RAMP_DURATION
+K6_BASE_URL
+```
+
+This allows experiments to be repeated without editing the test implementation.
+
+---
+
+# Backend Testing
+
+The Laravel test suite can be executed with:
 
 ```bash
-docker compose exec app bash
-docker compose exec app php artisan migrate
 docker compose exec app php artisan test
-docker compose ps
 ```
+
+The project uses Pest/Laravel testing tooling for backend verification.
 
 ---
 
-## 🔧 Troubleshooting
+# Security
 
-### k6 cannot reach Laravel
+Environment-specific credentials are intentionally excluded from version control.
 
-When k6 runs inside Docker, `localhost` refers to the k6 container itself. Use the Docker service name/internal Compose network address instead.
+Create local environment files from:
 
-### Video processing does not finish
-
-Ensure the queue worker is running:
-
-```bash
-docker compose up -d queue
+```text
+.env.example
+backend/.env.example
 ```
 
-Then inspect it:
-
-```bash
-docker compose logs -f queue
-```
-
-### FFmpeg errors
-
-Verify that the PHP/worker image contains the required FFmpeg tooling and inspect queue logs for the failing job.
-
-### Cloudinary errors
-
-Check the Cloudinary configuration in your local `.env`. Never commit those values.
-
-### Grafana has no data
-
-Verify Prometheus is running and k6 is executed with Prometheus remote-write output enabled:
-
-```bash
-docker compose logs -f prometheus
-```
-
-### Database/Redis problems
-
-```bash
-docker compose ps
-docker compose logs -f db
-docker compose logs -f redis
-```
+Production credentials, API keys, storage credentials, and SMTP credentials must be supplied through the deployment environment rather than committed to the repository.
 
 ---
 
-## 🔒 Security Notes
+# Project Outcome
 
-Before deploying outside local development:
+Wetube is a completed engineering case study focused on one problem:
 
-- Use strong application secrets.
-- Configure Cloudinary credentials securely.
-- Never commit `.env` files containing secrets.
-- Use production-appropriate database credentials.
-- Review upload limits and validation rules.
-- Review queue-worker resources and retry behavior.
-- Protect Grafana and Prometheus from unintended public exposure.
+**Separating expensive video-processing workloads from the HTTP request lifecycle while making the resulting system measurable under load.**
 
----
+The project demonstrates a complete path from:
 
-## 🤝 Contributing
-
-Contributions, ideas, and improvements are welcome.
-
-```bash
-git checkout -b feature/my-improvement
-# make your changes
-git commit -m "feat: describe the change"
-git push origin feature/my-improvement
+```text
+HTTP request
+     ↓
+Laravel
+     ↓
+Redis queue
+     ↓
+Background workers
+     ↓
+FFmpeg / Cloudinary
 ```
 
-Then open a pull request with a clear description and testing notes.
+with performance measurement through:
+
+```text
+k6
+ ↓
+InfluxDB
+ ↓
+Grafana
+```
+
+and application/infrastructure observability through:
+
+```text
+Laravel + Exporters
+ ↓
+Prometheus
+ ↓
+Grafana
+```
+
+The project is considered complete and is preserved as a portfolio reference and technical case study.
 
 ---
 
-## 📄 License
+# Author
 
-Wetube uses the **MIT License**, consistent with the Laravel application's project configuration.
+**Muhammad-S-Gh**
 
----
-
-## 👨‍💻 Author
-
-**Muhammad-S-Gh**  
-GitHub: [@Muhammad-S-Gh](https://github.com/Muhammad-S-Gh)
-
----
-
-<p align="center">
-  Built with Laravel, FFmpeg, Cloudinary, Docker, k6, Prometheus & Grafana.
-</p>
+[GitHub](https://github.com/Muhammad-S-Gh)

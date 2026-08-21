@@ -46,12 +46,6 @@ class AppServiceProvider extends ServiceProvider
             [1, 5, 10, 30, 60, 120, 300, 600]
         );
 
-        Prometheus::getOrRegisterHistogram(
-            'queue_wait_seconds',
-            'Upload Duration (s)',
-            ['pipeline', 'job'], // job = SanitizeJob, ConvertVideoJob, etc.
-            [0.1, 0.5, 1, 2, 5, 10, 30, 60]
-        );
     }
 
     /**

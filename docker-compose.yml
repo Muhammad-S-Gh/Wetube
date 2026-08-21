@@ -131,14 +131,14 @@ services:
         image: grafana/k6:${K6_VERSION}
         profiles: ['test']
         environment:
-            BASE_URL: ${K6_BASE_URL}
+            K6_BASE_URL: ${K6_BASE_URL}
             K6_OUT: influxdb=${INFLUX_URL}
         container_name: k6
         volumes:
             - ./k6:/scripts
         depends_on:
             - nginx
-            - prometheus
+            - influxdb
         networks:
             - wetube
 

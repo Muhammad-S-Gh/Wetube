@@ -140,7 +140,7 @@ return [
         ],
 
         'database' => [
-            'enabled' => env('PROMETHEUS_COLLECTOR_DATABASE_ENABLED', true),
+            'enabled' => env('PROMETHEUS_COLLECTOR_DATABASE_ENABLED', false),
 
             // Query duration tracking - Fine-grained for database performance monitoring
             // Covers: fast queries (~1ms) to slow queries (~5s), aligns with common DB SLOs
@@ -161,6 +161,7 @@ return [
 
         'queue' => [
             'enabled' => env('PROMETHEUS_COLLECTOR_QUEUE_ENABLED', true),
+            'enhanced' => env('PROMETHEUS_COLLECTOR_QUEUE_ENHANCED', true),
 
             // Job processing duration tracking - Wide range for different job types
             // Covers: quick jobs (~100ms) to long-running jobs (~10min)
@@ -175,7 +176,7 @@ return [
         ],
 
         'errors' => [
-            'enabled' => env('PROMETHEUS_COLLECTOR_ERRORS_ENABLED', true),
+            'enabled' => env('PROMETHEUS_COLLECTOR_ERRORS_ENABLED', false),
         ],
 
         'filesystem' => [
@@ -190,7 +191,7 @@ return [
         ],
 
         'command' => [
-            'enabled' => env('PROMETHEUS_COLLECTOR_COMMAND_ENABLED', true),
+            'enabled' => env('PROMETHEUS_COLLECTOR_COMMAND_ENABLED', false),
             // Artisan command duration - Wide range for different command types
             // Covers: quick commands (~100ms) to migrations/seeds (~30min)
             'histogram_buckets' => [0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0, 600.0, 1800.0],

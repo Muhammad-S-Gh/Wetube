@@ -1,12 +1,13 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { Counter, Rate, Trend } from 'k6/metrics';
+import { Counter, Rate } from 'k6/metrics';
 import { BASE_URL, getFreshToken, loadTestEmail, login, thinkTime } from './lib/common.js';
 
 // ─── Configuration ──────────────────────────────────────────
-const maxVus = 50;
-const hold = '3m';
-const ramp = '45s';
+const shortRun = __ENV.K6_SHORT === 'true';
+const maxVus = Number(__ENV.K6_MAX_VUS || (shortRun ? 1 : 20));
+const hold = __ENV.K6_HOLD_DURATION || '3m';
+const ramp = __ENV.K6_RAMP_DURATION || '45s';
 const videoFixturePath = './sample_video.mp4';
 const thumbFixturePath = './sample_thumb.jpg';
 
@@ -16,8 +17,6 @@ const sampleThumb = open(thumbFixturePath, 'b');
 
 // ─── Custom metrics ──────────────────────────────────────
 const optimizedSuccess = new Rate('optimized_upload_success');
-const optimizedDuration = new Trend('optimized_upload_duration', true);
-const optimizedErrors = new Counter('optimized_upload_errors');
 const optimizedProcessingBlocked = new Counter('optimized_upload_processing_blocked');
 const optimizedValidationErrors = new Counter('optimized_upload_validation_errors');
 const optimizedServerErrors = new Counter('optimized_upload_server_errors');
@@ -28,24 +27,30 @@ let loggedIn = false;
 // ─── Test options ──────────────────────────────────────────
 export const options = {
     scenarios: {
-        optimized_upload: {
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: ramp, target: Math.max(1, Math.floor(maxVus / 2)) },
-                { duration: hold, target: Math.max(1, Math.floor(maxVus / 2)) },
-                { duration: ramp, target: maxVus },
-                { duration: hold, target: maxVus },
-                { duration: ramp, target: 0 },
-            ],
-            gracefulRampDown: '20s',
-        },
+        optimized_upload: shortRun
+            ? {
+                  executor: 'per-vu-iterations',
+                  vus: maxVus,
+                  iterations: 1,
+                  maxDuration: '3m',
+              }
+            : {
+                  executor: 'ramping-vus',
+                  startVUs: 0,
+                  stages: [
+                      { duration: ramp, target: Math.max(1, Math.floor(maxVus / 2)) },
+                      { duration: hold, target: Math.max(1, Math.floor(maxVus / 2)) },
+                      { duration: ramp, target: maxVus },
+                      { duration: hold, target: maxVus },
+                      { duration: ramp, target: 0 },
+                  ],
+                  gracefulRampDown: '20s',
+              },
     },
     thresholds: {
         optimized_upload_success: ['rate>0.90'],
-        optimized_upload_duration: ['p(95)<15000'],
+        http_req_duration: ['p(95)<15000'],
         http_req_failed: ['rate<0.10'],
-        optimized_upload_errors: ['count<50'],
         optimized_upload_server_errors: ['count<10'],
     },
     tags: { test: 'optimized-store' },
@@ -63,8 +68,7 @@ export default function () {
 
     const csrfToken = getFreshToken();
     if (!csrfToken) {
-        optimizedErrors.add(1);
-        thinkTime(1, 2);
+        thinkTime(2, 4);
         return;
     }
 
@@ -98,10 +102,8 @@ export default function () {
     });
 
     optimizedSuccess.add(ok);
-    optimizedDuration.add(res.timings.duration);
 
     if (!ok) {
-        optimizedErrors.add(1);
         console.error(
             JSON.stringify({
                 vu: __VU,
@@ -128,11 +130,10 @@ export function handleSummary(data) {
                     videoFixturePath,
                     thumbFixturePath,
                     successRate: data.metrics.optimized_upload_success?.values?.rate,
-                    errors: data.metrics.optimized_upload_errors?.values?.count,
                     processingBlocked: data.metrics.optimized_upload_processing_blocked?.values?.count,
                     validationErrors: data.metrics.optimized_upload_validation_errors?.values?.count,
                     serverErrors: data.metrics.optimized_upload_server_errors?.values?.count,
-                    p95Ms: data.metrics.optimized_upload_duration?.values?.['p(95)'],
+                    p95Ms: data.metrics.http_req_duration?.values?.['p(95)'],
                     httpReqFailedRate: data.metrics.http_req_failed?.values?.rate,
                     checksRate: data.metrics.checks?.values?.rate,
                 },

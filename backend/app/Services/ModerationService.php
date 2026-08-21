@@ -13,6 +13,7 @@ class ModerationService
     public function __construct(
         private string $apiKey,
         private string $baseUrl,
+        private int $timeout = 8,
         private float $textToxicThreshold = 0.85,
         private float $textThreatThreshold = 0.85,
         private float $textIdentityHateThreshold = 0.85,
@@ -38,7 +39,7 @@ class ModerationService
         try {
             /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::withToken($this->apiKey)
-                ->timeout(8)
+                ->timeout($this->timeout)
                 ->retry(3, 200, throw: false)
                 ->post(
                     $this->baseUrl . '/unitary/toxic-bert',

@@ -3,7 +3,6 @@
 namespace App\Jobs\Video;
 
 use App\Enums\UploadStateEnum;
-use App\Http\Middleware\TrackQueueWaitTime;
 use Cloudinary\Api\Admin\AdminApi;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,8 +24,6 @@ class FinalizeUploadJob implements ShouldQueue
     public int $timeout = 120;
     public bool $deleteWhenMissingModels = true;
     protected ?string $thumbnailPublicId = null;
-    public $dispatched_at;
-    public string $pipeline = 'ffmpeg';
 
 
 
@@ -39,11 +36,6 @@ class FinalizeUploadJob implements ShouldQueue
         protected string $imagePath,
         protected string $token,
     ) {
-        $this->dispatched_at = microtime(true);
-    }
-    public function middleware(): array
-    {
-        return [new TrackQueueWaitTime];
     }
 
     /**

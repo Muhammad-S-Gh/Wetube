@@ -2,7 +2,6 @@
 
 namespace App\Jobs\Video;
 
-use App\Http\Middleware\TrackQueueWaitTime;
 use App\Models\Media;
 use App\Models\Video;
 use Cloudinary\Api\Upload\UploadApi;
@@ -29,8 +28,6 @@ class ProcessVideoJob implements ShouldQueue
     public int $tries = 1;
     public int $timeout = 1800;
     public bool $deleteWhenMissingModels = true;
-    public $dispatched_at;
-    public string $pipeline = 'ffmpeg';
 
     /**
      * Create a new job instance.
@@ -44,11 +41,6 @@ class ProcessVideoJob implements ShouldQueue
         protected string $format,
         protected string $token
     ) {
-        $this->dispatched_at = microtime(true);
-    }
-    public function middleware(): array
-    {
-        return [new TrackQueueWaitTime];
     }
 
     /**

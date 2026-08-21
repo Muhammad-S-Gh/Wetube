@@ -1,7 +1,9 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-export const BASE_URL = 'http://nginx:80';
+// Docker Compose supplies K6_BASE_URL. The fallback keeps direct Docker runs
+// reproducible without coupling the test to a hard-coded host address.
+export const BASE_URL = __ENV.K6_BASE_URL || 'http://nginx:80';
 export const TEST_PASSWORD = '1234567890';
 
 export function login(email) {

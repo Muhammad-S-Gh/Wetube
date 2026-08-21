@@ -5,7 +5,6 @@ namespace App\Jobs\Video;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Enums\UploadStateEnum;
-use App\Http\Middleware\TrackQueueWaitTime;
 use App\Models\Media;
 use App\Models\Notification;
 use App\Models\Video;
@@ -24,8 +23,6 @@ class OptimizedUploadJob implements ShouldQueue
     public int $tries = 1;
     public int $timeout = 300;
     public bool $deleteWhenMissingModels = true;
-    public $dispatched_at;
-    public string $pipeline = 'optimized';
 
     /**
      * Create a new job instance.
@@ -35,13 +32,8 @@ class OptimizedUploadJob implements ShouldQueue
         protected string $videoPath,
         protected string $imagePath,
     ) {
-        $this->dispatched_at = microtime(true);
     }
 
-    public function middleware(): array
-    {
-        return [new TrackQueueWaitTime];
-    }
 
     /**
      * Execute the job.

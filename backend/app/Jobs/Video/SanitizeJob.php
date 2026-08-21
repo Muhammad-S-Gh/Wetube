@@ -3,7 +3,6 @@
 namespace App\Jobs\Video;
 
 use App\Enums\UploadStateEnum;
-use App\Http\Middleware\TrackQueueWaitTime;
 use App\Models\Notification;
 use App\Models\Video;
 use App\Services\ModerationService;
@@ -20,19 +19,12 @@ class SanitizeJob implements ShouldQueue
     public int $tries = 1;
     public int $timeout = 180;
     public bool $deleteWhenMissingModels = true;
-    public $dispatched_at;
-    public string $pipeline = 'ffmpeg';
     public function __construct(
         protected int $videoId,
         protected string $videoPath,
         protected string $imagePath,
         protected string $title,
     ) {
-        $this->dispatched_at = microtime(true);
-    }
-    public function middleware(): array
-    {
-        return [new TrackQueueWaitTime];
     }
 
     public function handle(ModerationService $moderation): void
