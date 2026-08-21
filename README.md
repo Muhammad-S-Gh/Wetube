@@ -628,6 +628,3 @@ GitHub: [@Muhammad-S-Gh](https://github.com/Muhammad-S-Gh)
 
 ---
 
-<p align="center">
-  Built with Laravel, FFmpeg, Cloudinary, Docker, k6, Prometheus & Grafana.
-</p>
