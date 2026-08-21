@@ -106,7 +106,7 @@ class CloudinaryMediaService
     {
         return $this->apiResponseToArray((new UploadApi())->upload($absolutePath, [
             'resource_type' => 'video',
-            'folder' => config('filesystems.disks.cloudinary.videos'),
+            'asset_folder' => config('cloudinary.video_folder', 'wetube/videos'),
             'public_id' => $this->buildPublicId($videoId, 'video'),
         ]));
     }
@@ -120,7 +120,7 @@ class CloudinaryMediaService
 
         return $this->apiResponseToArray((new UploadApi())->upload($absolutePath, [
             'resource_type' => 'image',
-            'folder' => config('filesystems.disks.cloudinary.images'),
+            'asset_folder' => config('cloudinary.image_folder', 'wetube/images'),
             'public_id' => $this->buildPublicId($videoId, 'thumb'),
             'transformation' => [[
                 'width' => $thumb['width'],

@@ -13,18 +13,24 @@ class ModerationService
     public function __construct(
         private string $apiKey,
         private string $baseUrl,
+        private int $timeout = 8,
         private float $textToxicThreshold = 0.85,
         private float $textThreatThreshold = 0.85,
         private float $textIdentityHateThreshold = 0.85,
         private float $textObsceneThreshold = 0.85,
         private float $textInsultThreshold = 0.85,
-        private float $imageNsfwThreshold = 0.35
+        private float $imageNsfwThreshold = 0.35,
+        private bool $enabled = true
     ) {}
     /**
      * Text moderation.
      */
     public function moderateText(string $text): array
     {
+        if (!$this->enabled) {
+            return ['pass' => true, 'reason' => 'moderation_disabled'];
+        }
+
         if (!$this->apiKey) {
             return ['pass' => false, 'reason' => 'missing_api_key'];
         }
@@ -38,7 +44,7 @@ class ModerationService
         try {
             /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::withToken($this->apiKey)
-                ->timeout(8)
+                ->timeout($this->timeout)
                 ->retry(3, 200, throw: false)
                 ->post(
                     $this->baseUrl . '/unitary/toxic-bert',
@@ -102,6 +108,10 @@ class ModerationService
      */
     public function moderateImage(string $filePath)
     {
+        if (!$this->enabled) {
+            return ['pass' => true, 'reason' => 'moderation_disabled'];
+        }
+
         if (!$this->apiKey) {
             return ['pass' => false, 'reason' => 'missing_api_key'];
         }
@@ -132,6 +142,10 @@ class ModerationService
      */
     public function moderateVideo(string $videoPath): array
     {
+        if (!$this->enabled) {
+            return ['pass' => true, 'reason' => 'moderation_disabled'];
+        }
+
         $fullPath = Storage::disk('uploads_tmp')->path($videoPath);
 
         if (!is_file($fullPath)) {

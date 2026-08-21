@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Local Docker/runtime state
+*.log
+.DS_Store
+.idea/
+.vscode/

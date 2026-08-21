@@ -22,7 +22,8 @@ class ModerationServiceProvider extends ServiceProvider
                 config('services.hugging_face.text_identity_hate_threshold', 0.85),
                 config('services.hugging_face.text_obscene_threshold', 0.85),
                 config('services.hugging_face.text_insult_threshold', 0.85),
-                config('services.hugging_face.image_nsfw_threshold', 0.35)
+                config('services.hugging_face.image_nsfw_threshold', 0.35),
+                config('services.hugging_face.enabled', true),
             );
         });
     }

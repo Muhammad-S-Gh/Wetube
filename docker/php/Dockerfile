@@ -49,7 +49,7 @@ RUN pecl install imagick \
 
 # Install supercronic (a single‑binary cron daemon)
 RUN wget -qO /usr/local/bin/supercronic \
-    "https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64" \
+    "https://github.com/aptible/supercronic/releases/download/v0.2.46/supercronic-linux-amd64" \
     && chmod +x /usr/local/bin/supercronic
 
 # Copy the crontab file into the image

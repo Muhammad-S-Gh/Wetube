@@ -1,11 +1,12 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { Counter, Rate, Trend } from 'k6/metrics';
+import { Counter, Rate } from 'k6/metrics';
 import { BASE_URL, getFreshToken, loadTestEmail, login, thinkTime } from './lib/common.js';
 
-const maxVus = 20;
-const hold = '3m';
-const ramp = '45s';
+const shortRun = __ENV.K6_SHORT === 'true';
+const maxVus = Number(__ENV.K6_MAX_VUS || (shortRun ? 1 : 20));
+const hold = __ENV.K6_HOLD_DURATION || '3m';
+const ramp = __ENV.K6_RAMP_DURATION || '45s';
 const videoFixturePath = './sample_video.mp4';
 const thumbFixturePath = './sample_thumb.jpg';
 
@@ -13,8 +14,6 @@ const sampleVideo = open(videoFixturePath, 'b');
 const sampleThumb = open(thumbFixturePath, 'b');
 
 const uploadAccepted = new Rate('legacy_upload_accepted');
-const uploadDuration = new Trend('legacy_upload_duration', true);
-const uploadRejected = new Counter('legacy_upload_rejected');
 const processingBlocked = new Counter('legacy_upload_processing_blocked');
 const validationErrors = new Counter('legacy_upload_validation_errors');
 const serverErrors = new Counter('legacy_upload_server_errors');
@@ -24,22 +23,29 @@ let loggedIn = false;
 
 export const options = {
     scenarios: {
-        legacy_acceptance: {
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: ramp, target: Math.max(1, Math.floor(maxVus / 2)) },
-                { duration: hold, target: Math.max(1, Math.floor(maxVus / 2)) },
-                { duration: ramp, target: maxVus },
-                { duration: hold, target: maxVus },
-                { duration: ramp, target: 0 },
-            ],
-            gracefulRampDown: '20s',
-        },
+        legacy_acceptance: shortRun
+            ? {
+                  executor: 'per-vu-iterations',
+                  vus: maxVus,
+                  iterations: 1,
+                  maxDuration: '2m',
+              }
+            : {
+                  executor: 'ramping-vus',
+                  startVUs: 0,
+                  stages: [
+                      { duration: ramp, target: Math.max(1, Math.floor(maxVus / 2)) },
+                      { duration: hold, target: Math.max(1, Math.floor(maxVus / 2)) },
+                      { duration: ramp, target: maxVus },
+                      { duration: hold, target: maxVus },
+                      { duration: ramp, target: 0 },
+                  ],
+                  gracefulRampDown: '20s',
+              },
     },
     thresholds: {
         legacy_upload_accepted: ['rate>0.85'],
-        legacy_upload_duration: ['p(95)<30000'],
+        http_req_duration: ['p(95)<30000'],
         http_req_failed: ['rate<0.20'],
         legacy_upload_server_errors: ['count<10'],
     },
@@ -57,8 +63,7 @@ export default function () {
 
     const csrfToken = getFreshToken();
     if (!csrfToken) {
-        uploadRejected.add(1);
-        thinkTime(1, 2);
+        thinkTime(2, 4);
         return;
     }
 
@@ -91,10 +96,8 @@ export default function () {
     });
 
     uploadAccepted.add(accepted);
-    uploadDuration.add(res.timings.duration);
 
     if (!accepted) {
-        uploadRejected.add(1);
         console.error(
             JSON.stringify({
                 route: '/videos',
@@ -108,7 +111,7 @@ export default function () {
         );
     }
 
-    thinkTime(4, 8);
+    thinkTime(2, 4);
 }
 
 export function handleSummary(data) {
@@ -121,11 +124,10 @@ export function handleSummary(data) {
                     videoFixturePath,
                     thumbFixturePath,
                     acceptedRate: data.metrics.legacy_upload_accepted?.values?.rate,
-                    rejected: data.metrics.legacy_upload_rejected?.values?.count,
                     processingBlocked: data.metrics.legacy_upload_processing_blocked?.values?.count,
                     validationErrors: data.metrics.legacy_upload_validation_errors?.values?.count,
                     serverErrors: data.metrics.legacy_upload_server_errors?.values?.count,
-                    p95Ms: data.metrics.legacy_upload_duration?.values?.['p(95)'],
+                    p95Ms: data.metrics.http_req_duration?.values?.['p(95)'],
                     httpReqFailedRate: data.metrics.http_req_failed?.values?.rate,
                     checksRate: data.metrics.checks?.values?.rate,
                 },

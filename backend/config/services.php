@@ -50,6 +50,8 @@ return [
         'key' => env('HUGGING_FACE_API_KEY'),
         'base_url' => env('HUGGING_FACE_BASE_URL', env('BASE_URL', 'https://api-inference.huggingface.co/models')),
         'timeout' => env('HUGGING_FACE_TIMEOUT', env('TIMEOUT', 8)),
+        'enabled' => env('HUGGING_FACE_MODERATION_ENABLED', true),
+        //
         'image_nsfw_threshold' => (float) env('HUGGING_FACE_IMAGE_NSFW_THRESHOLD', 0.35),
         //
         'text_toxic_threshold' => (float) env('HUGGING_FACE_TEXT_TOXIC_THRESHOLD', 0.85),
